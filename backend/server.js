@@ -1,4 +1,6 @@
 
+
+
 const express = require("express");
 const cors = require("cors");
 
@@ -8,7 +10,120 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Charging stations
+// ===============================
+// USERS
+// ===============================
+
+let users = [];
+
+// Register
+app.post("/api/register", (req, res) => {
+  const {
+    fullName,
+    email,
+    phone,
+    password,
+    confirmPassword
+  } = req.body;
+
+  // Check all fields
+  if (
+    !fullName ||
+    !email ||
+    !phone ||
+    !password ||
+    !confirmPassword
+  ) {
+    return res.status(400).json({
+      message: "All registration fields are required."
+    });
+  }
+
+  // Check password match
+  if (password !== confirmPassword) {
+    return res.status(400).json({
+      message: "Passwords do not match."
+    });
+  }
+
+  // Check phone
+  if (!/^\d{10}$/.test(phone)) {
+    return res.status(400).json({
+      message: "Please enter a valid 10-digit phone number."
+    });
+  }
+
+  // Check email
+  const emailExists = users.some(
+    (user) =>
+      user.email.toLowerCase() === email.toLowerCase()
+  );
+
+  if (emailExists) {
+    return res.status(400).json({
+      message: "An account with this email already exists."
+    });
+  }
+
+  // Create user
+  const newUser = {
+    id: users.length + 1,
+    fullName,
+    email,
+    phone,
+    password
+  };
+
+  users.push(newUser);
+
+  res.status(201).json({
+    message: "Registration successful!",
+    user: {
+      id: newUser.id,
+      fullName: newUser.fullName,
+      email: newUser.email,
+      phone: newUser.phone
+    }
+  });
+});
+
+// Login
+app.post("/api/login", (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      message: "Email and password are required."
+    });
+  }
+
+  const user = users.find(
+    (user) =>
+      user.email.toLowerCase() === email.toLowerCase() &&
+      user.password === password
+  );
+
+  if (!user) {
+    return res.status(401).json({
+      message: "Invalid email or password."
+    });
+  }
+
+  res.json({
+    message: "Login successful!",
+    user: {
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.phone
+    }
+  });
+});
+
+// ===============================
+// CHARGING STATIONS
+// ===============================
+
 const stations = [
   {
     id: 1,
@@ -36,7 +151,10 @@ const stations = [
   }
 ];
 
-// Bookings
+// ===============================
+// BOOKINGS
+// ===============================
+
 let bookings = [];
 
 // Home API
@@ -68,7 +186,10 @@ app.get("/api/stations/:id", (req, res) => {
   res.json(station);
 });
 
-// Create booking
+// ===============================
+// CREATE BOOKING
+// ===============================
+
 app.post("/api/bookings", (req, res) => {
   const {
     userName,
@@ -79,7 +200,6 @@ app.post("/api/bookings", (req, res) => {
     vehicleNumber
   } = req.body;
 
-  // Check all fields
   if (
     !userName ||
     !contact ||
@@ -97,21 +217,18 @@ app.post("/api/bookings", (req, res) => {
     (station) => station.id === Number(stationId)
   );
 
-  // Check station
   if (!station) {
     return res.status(404).json({
       message: "Charging station not found"
     });
   }
 
-  // Check station capacity
   if (station.availableSlots <= 0) {
     return res.status(400).json({
       message: "No charging slots are available at this station"
     });
   }
 
-  // Check whether the exact station + date + time is already booked
   const slotAlreadyBooked = bookings.some(
     (booking) =>
       booking.stationId === Number(stationId) &&
@@ -126,7 +243,6 @@ app.post("/api/bookings", (req, res) => {
     });
   }
 
-  // Create booking
   const newBooking = {
     id: bookings.length + 1,
     userName,
@@ -139,10 +255,8 @@ app.post("/api/bookings", (req, res) => {
 
   bookings.push(newBooking);
 
-  // Reduce available slots
   station.availableSlots -= 1;
 
-  // Update station status
   if (station.availableSlots === 0) {
     station.status = "Full";
   } else {
@@ -155,7 +269,10 @@ app.post("/api/bookings", (req, res) => {
   });
 });
 
-// Get all bookings
+// ===============================
+// GET BOOKINGS
+// ===============================
+
 app.get("/api/bookings", (req, res) => {
   res.json(bookings);
 });
@@ -177,7 +294,10 @@ app.get("/api/bookings/:id", (req, res) => {
   res.json(booking);
 });
 
-// Update booking
+// ===============================
+// UPDATE BOOKING
+// ===============================
+
 app.put("/api/bookings/:id", (req, res) => {
   const bookingId = Number(req.params.id);
 
@@ -211,7 +331,6 @@ app.put("/api/bookings/:id", (req, res) => {
     });
   }
 
-  // Check if another booking already uses the new slot
   const slotAlreadyBooked = bookings.some(
     (existingBooking) =>
       existingBooking.id !== bookingId &&
@@ -239,7 +358,10 @@ app.put("/api/bookings/:id", (req, res) => {
   });
 });
 
-// Cancel booking
+// ===============================
+// CANCEL BOOKING
+// ===============================
+
 app.delete("/api/bookings/:id", (req, res) => {
   const bookingId = Number(req.params.id);
 
@@ -255,7 +377,6 @@ app.delete("/api/bookings/:id", (req, res) => {
 
   const booking = bookings[bookingIndex];
 
-  // Return the slot to the station
   const station = stations.find(
     (station) => station.id === booking.stationId
   );
@@ -268,7 +389,6 @@ app.delete("/api/bookings/:id", (req, res) => {
     }
   }
 
-  // Remove booking
   bookings.splice(bookingIndex, 1);
 
   res.json({
@@ -277,7 +397,8 @@ app.delete("/api/bookings/:id", (req, res) => {
   });
 });
 
-// Start server
+
+
 const port = 5000;
 
 app.listen(port, () => {
