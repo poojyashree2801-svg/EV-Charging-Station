@@ -1,11 +1,14 @@
 
+
 import React, { useEffect, useState } from "react";
 import "./App.css";
+
 
 function App() {
   const [stations, setStations] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedStation, setSelectedStation] = useState(null);
 
   const [formData, setFormData] = useState({
     userName: "",
@@ -18,8 +21,63 @@ function App() {
 
   const [message, setMessage] = useState("");
 
+  // Station images, ratings and information
+  const stationDetails = {
+    1: {
+      image:
+        "./car.jpg",
+      rating: 4.7,
+      description:
+        "Green Charge Hub is a modern EV charging station in Bangalore with fast charging facilities and convenient access for EV owners.",
+      facilities: ["DC Fast Charging", "Parking", "24/7 Access"],
+      price: "₹15 per kWh",
+      timeSlots: [
+        "06:00 AM",
+        "07:00 AM",
+        "08:00 AM",
+        "09:00 AM",
+        "10:00 AM",
+        "11:00 AM",
+        "12:00 PM"
+      ]
+    },
+    2: {
+      image:
+        "./charger.jpg",
+      rating: 4.4,
+      description:
+        "EcoCharge Station provides reliable AC charging in Chennai with a comfortable location for EV users.",
+      facilities: ["AC Charging", "Parking", "Easy Access"],
+      price: "₹10 per kWh",
+      timeSlots: [
+        "07:00 AM",
+        "08:00 AM",
+        "09:00 AM",
+        "10:00 AM",
+        "11:00 AM",
+        "12:00 PM"
+      ]
+    },
+    3: {
+      image:
+        "./charger2.jpg",
+      rating: 4.2,
+      description:
+        "VoltPoint is a DC fast charging station in Hyderabad. It is currently fully occupied.",
+      facilities: ["DC Fast Charging", "Parking", "Fast Charging"],
+      price: "₹15 per kWh",
+      timeSlots: [
+        "06:00 AM",
+        "07:00 AM",
+        "08:00 AM",
+        "09:00 AM",
+        "10:00 AM"
+      ]
+    }
+  };
+
   // Get charging stations
-  useEffect(() => {
+  const fetchStations = () => {
     fetch("http://localhost:5000/api/stations")
       .then((response) => response.json())
       .then((data) => {
@@ -31,7 +89,7 @@ function App() {
         setMessage("Unable to load charging stations.");
         setLoading(false);
       });
-  }, []);
+  };
 
   // Get all bookings
   const fetchBookings = () => {
@@ -46,19 +104,48 @@ function App() {
       });
   };
 
-  // Handle input changes
+  useEffect(() => {
+    fetchStations();
+  }, []);
+
+  // Handle form changes
   const handleChange = (event) => {
+    const { name, value } = event.target;
+
     setFormData({
       ...formData,
-      [event.target.name]: event.target.value
+      [name]: value
     });
+  };
+
+  // Select station
+  const handleStationSelect = (station) => {
+    setSelectedStation(station);
+
+    setFormData({
+      ...formData,
+      stationId: station.id,
+      time: ""
+    });
+
+    setMessage("");
+  };
+
+  // Select time slot
+  const handleTimeSlotSelect = (time) => {
+    setFormData({
+      ...formData,
+      stationId: selectedStation.id,
+      time
+    });
+
+    setMessage("");
   };
 
   // Create booking
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    // Frontend validation
     if (
       !formData.userName ||
       !formData.contact ||
@@ -71,7 +158,6 @@ function App() {
       return;
     }
 
-    // Contact validation
     if (!/^\d{10}$/.test(formData.contact)) {
       setMessage("Please enter a valid 10-digit contact number.");
       return;
@@ -90,13 +176,7 @@ function App() {
 
         if (data.booking) {
           fetchBookings();
-
-          // Refresh stations so slot count updates
-          fetch("http://localhost:5000/api/stations")
-            .then((response) => response.json())
-            .then((data) => {
-              setStations(data);
-            });
+          fetchStations();
 
           setFormData({
             userName: "",
@@ -106,6 +186,8 @@ function App() {
             time: "",
             vehicleNumber: ""
           });
+
+          setSelectedStation(null);
         }
       })
       .catch((error) => {
@@ -124,13 +206,7 @@ function App() {
         setMessage(data.message);
 
         fetchBookings();
-
-        // Refresh stations so slot count updates
-        fetch("http://localhost:5000/api/stations")
-          .then((response) => response.json())
-          .then((data) => {
-            setStations(data);
-          });
+        fetchStations();
       })
       .catch((error) => {
         console.error("Cancellation error:", error);
@@ -138,159 +214,398 @@ function App() {
       });
   };
 
+  // Check whether a time slot is already booked
+  const isSlotBooked = (stationId, time) => {
+    return bookings.some(
+      (booking) =>
+        Number(booking.stationId) === Number(stationId) &&
+        booking.time === time
+    );
+  };
+
   return (
     <div className="App">
-      <h1>EV Charging Station</h1>
+      {/* Header */}
+      <header className="dashboard-header">
+        <h1>⚡ EV Charging Station</h1>
+        <p>Find, select and book your EV charging station</p>
+      </header>
 
       {/* Charging Stations */}
-      <h2>Available Charging Stations</h2>
+      <section className="dashboard-section">
+        <h2>🔌 Charging Stations</h2>
 
-      {loading ? (
-        <p>Loading stations...</p>
-      ) : (
-        <div className="stations">
-          {stations.map((station) => (
-            <div className="station-card" key={station.id}>
-              <h3>{station.name}</h3>
+        {loading ? (
+          <p>Loading charging stations...</p>
+        ) : (
+          <div className="stations">
+            {stations.map((station) => {
+              const details = stationDetails[station.id];
+
+              return (
+                <div className="station-card" key={station.id}>
+                  <img
+                    src={details?.image}
+                    alt={station.name}
+                    className="station-image"
+                  />
+
+                  <div className="station-content">
+                    <h3>{station.name}</h3>
+
+                    <p>
+                      <strong>📍 Location:</strong> {station.location}
+                    </p>
+
+                    <p>
+                      <strong>⚡ Charger:</strong> {station.chargerType}
+                    </p>
+
+                    <p>
+                      <strong>⭐ Rating:</strong>{" "}
+                      {details?.rating || "N/A"} / 5
+                    </p>
+
+                    <p>
+                      <strong>Available Slots:</strong>{" "}
+                      {station.availableSlots}
+                    </p>
+
+                    <p
+                      className={
+                        station.availableSlots > 0
+                          ? "available"
+                          : "full"
+                      }
+                    >
+                      {station.availableSlots > 0
+                        ? "🟢 Available"
+                        : "🔴 Full"}
+                    </p>
+
+                    <button
+                      className="details-button"
+                      onClick={() => handleStationSelect(station)}
+                    >
+                      View Details & Book
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* Selected Station Details */}
+      {selectedStation && (
+        <section className="station-details">
+          <h2>📍 Station Details</h2>
+
+          <div className="details-container">
+            <img
+              src={stationDetails[selectedStation.id]?.image}
+              alt={selectedStation.name}
+              className="details-image"
+            />
+
+            <div className="details-info">
+              <h2>{selectedStation.name}</h2>
 
               <p>
-                <strong>Location:</strong> {station.location}
+                <strong>Location:</strong>{" "}
+                {selectedStation.location}
               </p>
 
               <p>
-                <strong>Charger:</strong> {station.chargerType}
+                <strong>Charger Type:</strong>{" "}
+                {selectedStation.chargerType}
+              </p>
+
+              <p>
+                <strong>Rating:</strong> ⭐{" "}
+                {stationDetails[selectedStation.id]?.rating} / 5
+              </p>
+
+              <p>
+                <strong>Price:</strong>{" "}
+                {stationDetails[selectedStation.id]?.price}
               </p>
 
               <p>
                 <strong>Available Slots:</strong>{" "}
-                {station.availableSlots}
+                {selectedStation.availableSlots}
               </p>
 
               <p>
-                <strong>Status:</strong>{" "}
-                {station.availableSlots === 0
-                  ? "Full"
-                  : "Available"}
+                {stationDetails[selectedStation.id]?.description}
               </p>
+
+              <h3>Facilities</h3>
+
+              <ul>
+                {stationDetails[selectedStation.id]?.facilities.map(
+                  (facility) => (
+                    <li key={facility}>{facility}</li>
+                  )
+                )}
+              </ul>
             </div>
-          ))}
-        </div>
+          </div>
+
+          {/* Time Slots */}
+          <h3 className="slot-heading">
+            🕐 Select an Available Time Slot
+          </h3>
+
+          <div className="time-slots">
+            {stationDetails[selectedStation.id]?.timeSlots.map(
+              (time) => {
+                const booked = isSlotBooked(
+                  selectedStation.id,
+                  time
+                );
+
+                const selected = formData.time === time;
+
+                return (
+                  <button
+                    key={time}
+                    type="button"
+                    disabled={
+                      booked ||
+                      selectedStation.availableSlots === 0
+                    }
+                    className={`time-slot ${
+                      selected ? "selected-slot" : ""
+                    } ${booked ? "booked-slot" : ""}`}
+                    onClick={() =>
+                      handleTimeSlotSelect(time)
+                    }
+                  >
+                    {time}
+                    <span>
+                      {booked
+                        ? "Booked"
+                        : selected
+                        ? "Selected"
+                        : "Available"}
+                    </span>
+                  </button>
+                );
+              }
+            )}
+          </div>
+
+          <button
+            className="close-button"
+            onClick={() => {
+              setSelectedStation(null);
+              setFormData({
+                ...formData,
+                stationId: "",
+                time: ""
+              });
+            }}
+          >
+            Close Station Details
+          </button>
+        </section>
       )}
 
       {/* Booking Form */}
-      <h2>Book a Charging Slot</h2>
+      <section className="booking-section">
+        <h2>📝 Book a Charging Slot</h2>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="userName"
-          placeholder="Your Name"
-          value={formData.userName}
-          onChange={handleChange}
-        />
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            name="userName"
+            placeholder="Your Name"
+            value={formData.userName}
+            onChange={handleChange}
+          />
 
-        <input
-          type="text"
-          name="contact"
-          placeholder="10-digit Contact Number"
-          value={formData.contact}
-          onChange={handleChange}
-        />
+          <input
+            type="text"
+            name="contact"
+            placeholder="10-digit Contact Number"
+            value={formData.contact}
+            onChange={handleChange}
+          />
 
-        <select
-          name="stationId"
-          value={formData.stationId}
-          onChange={handleChange}
-        >
-          <option value="">Select Station</option>
+          <input
+            type="text"
+            name="vehicleNumber"
+            placeholder="Vehicle Number"
+            value={formData.vehicleNumber}
+            onChange={handleChange}
+          />
 
-          {stations.map((station) => (
-            <option
-              key={station.id}
-              value={station.id}
-              disabled={station.availableSlots === 0}
-            >
-              {station.name} - {station.availableSlots} slots
+          <select
+            name="stationId"
+            value={formData.stationId}
+            onChange={(event) => {
+              handleChange(event);
+
+              const station = stations.find(
+                (item) =>
+                  item.id === Number(event.target.value)
+              );
+
+              if (station) {
+                setSelectedStation(station);
+              }
+            }}
+          >
+            <option value="">Select Station</option>
+
+            {stations.map((station) => (
+              <option
+                key={station.id}
+                value={station.id}
+                disabled={station.availableSlots === 0}
+              >
+                {station.name} - {station.availableSlots} slots
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
+          />
+
+          <select
+            name="time"
+            value={formData.time}
+            onChange={handleChange}
+            disabled={!selectedStation}
+          >
+            <option value="">
+              {selectedStation
+                ? "Select Time Slot"
+                : "Select Station First"}
             </option>
-          ))}
-        </select>
 
-        <input
-          type="date"
-          name="date"
-          value={formData.date}
-          onChange={handleChange}
-        />
+            {selectedStation &&
+              stationDetails[selectedStation.id]?.timeSlots.map(
+                (time) => (
+                  <option
+                    key={time}
+                    value={time}
+                    disabled={isSlotBooked(
+                      selectedStation.id,
+                      time
+                    )}
+                  >
+                    {time}
+                    {isSlotBooked(
+                      selectedStation.id,
+                      time
+                    )
+                      ? " - Booked"
+                      : " - Available"}
+                  </option>
+                )
+              )}
+          </select>
 
-        <input
-          type="time"
-          name="time"
-          value={formData.time}
-          onChange={handleChange}
-        />
+          <button
+            type="submit"
+            disabled={
+              !selectedStation ||
+              selectedStation.availableSlots === 0
+            }
+          >
+            Book Charging Slot
+          </button>
+        </form>
+      </section>
 
-        <input
-          type="text"
-          name="vehicleNumber"
-          placeholder="Vehicle Number"
-          value={formData.vehicleNumber}
-          onChange={handleChange}
-        />
-
-        <button type="submit">
-          Book Charging Slot
-        </button>
-      </form>
-
-      {/* Success / Error Message */}
-      {message && <p>{message}</p>}
-
-      {/* Bookings */}
-      <h2>My Bookings</h2>
-
-      <button onClick={fetchBookings}>
-        View Bookings
-      </button>
-
-      {bookings.length === 0 ? (
-        <p>No bookings available.</p>
-      ) : (
-        bookings.map((booking) => (
-          <div key={booking.id}>
-            <h3>Booking #{booking.id}</h3>
-
-            <p>
-              <strong>Name:</strong> {booking.userName}
-            </p>
-
-            <p>
-              <strong>Contact:</strong> {booking.contact}
-            </p>
-
-            <p>
-              <strong>Station ID:</strong> {booking.stationId}
-            </p>
-
-            <p>
-              <strong>Date:</strong> {booking.date}
-            </p>
-
-            <p>
-              <strong>Time:</strong> {booking.time}
-            </p>
-
-            <p>
-              <strong>Vehicle:</strong> {booking.vehicleNumber}
-            </p>
-
-            <button
-              onClick={() => cancelBooking(booking.id)}
-            >
-              Cancel Booking
-            </button>
-          </div>
-        ))
+      {/* Message */}
+      {message && (
+        <div className="message">
+          {message}
+        </div>
       )}
+
+      {/* My Bookings */}
+      <section className="bookings-section">
+        <h2>📋 My Bookings</h2>
+
+        <button
+          className="view-bookings-button"
+          onClick={fetchBookings}
+        >
+          View Bookings
+        </button>
+
+        {bookings.length === 0 ? (
+          <p>No bookings available.</p>
+        ) : (
+          <div className="bookings-list">
+            {bookings.map((booking) => {
+              const station = stations.find(
+                (item) =>
+                  item.id === Number(booking.stationId)
+              );
+
+              return (
+                <div
+                  className="booking-card"
+                  key={booking.id}
+                >
+                  <h3>Booking #{booking.id}</h3>
+
+                  <p>
+                    <strong>Name:</strong>{" "}
+                    {booking.userName}
+                  </p>
+
+                  <p>
+                    <strong>Contact:</strong>{" "}
+                    {booking.contact}
+                  </p>
+
+                  <p>
+                    <strong>Station:</strong>{" "}
+                    {station
+                      ? station.name
+                      : `Station ${booking.stationId}`}
+                  </p>
+
+                  <p>
+                    <strong>Date:</strong>{" "}
+                    {booking.date}
+                  </p>
+
+                  <p>
+                    <strong>Time:</strong>{" "}
+                    {booking.time}
+                  </p>
+
+                  <p>
+                    <strong>Vehicle:</strong>{" "}
+                    {booking.vehicleNumber}
+                  </p>
+
+                  <button
+                    className="cancel-button"
+                    onClick={() =>
+                      cancelBooking(booking.id)
+                    }
+                  >
+                    Cancel Booking
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

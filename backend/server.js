@@ -1,10 +1,14 @@
-const express = require('express');
-const cors = require('cors');
+
+const express = require("express");
+const cors = require("cors");
+
 const app = express();
 
-//middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
+
+// Charging stations
 const stations = [
   {
     id: 1,
@@ -31,20 +35,29 @@ const stations = [
     status: "Full"
   }
 ];
+
+// Bookings
 let bookings = [];
-//api
-app.get('/',(req,res)=>{
-    res.json({
-        message: "EV Charging Station Backend is running!"
-    });
+
+// Home API
+app.get("/", (req, res) => {
+  res.json({
+    message: "EV Charging Station Backend is running!"
+  });
 });
-app.get('/api/stations', (req, res) => {
-    res.json(stations);
+
+// Get all stations
+app.get("/api/stations", (req, res) => {
+  res.json(stations);
 });
+
+// Get one station
 app.get("/api/stations/:id", (req, res) => {
   const stationId = Number(req.params.id);
 
-  const station = stations.find((station) => station.id === stationId);
+  const station = stations.find(
+    (station) => station.id === stationId
+  );
 
   if (!station) {
     return res.status(404).json({
@@ -54,34 +67,66 @@ app.get("/api/stations/:id", (req, res) => {
 
   res.json(station);
 });
-app.post("/api/bookings", (req, res) => {
-  const { userName, contact, stationId, date, time, vehicleNumber } = req.body;
 
-  if (!userName || !contact || !stationId || !date || !time || !vehicleNumber) {
+// Create booking
+app.post("/api/bookings", (req, res) => {
+  const {
+    userName,
+    contact,
+    stationId,
+    date,
+    time,
+    vehicleNumber
+  } = req.body;
+
+  // Check all fields
+  if (
+    !userName ||
+    !contact ||
+    !stationId ||
+    !date ||
+    !time ||
+    !vehicleNumber
+  ) {
     return res.status(400).json({
       message: "All booking fields are required"
     });
   }
 
   const station = stations.find(
-  (station) => station.id === Number(stationId)
-);
+    (station) => station.id === Number(stationId)
+  );
 
-if (!station) {
-  return res.status(404).json({
-    message: "Charging station not found"
-  });
-}
+  // Check station
+  if (!station) {
+    return res.status(404).json({
+      message: "Charging station not found"
+    });
+  }
 
+  // Check station capacity
+  if (station.availableSlots <= 0) {
+    return res.status(400).json({
+      message: "No charging slots are available at this station"
+    });
+  }
 
-if (station.availableSlots <= 0) {
-  return res.status(400).json({
-    message: "No charging slots are available at this station"
-  });
-}
+  // Check whether the exact station + date + time is already booked
+  const slotAlreadyBooked = bookings.some(
+    (booking) =>
+      booking.stationId === Number(stationId) &&
+      booking.date === date &&
+      booking.time === time
+  );
 
+  if (slotAlreadyBooked) {
+    return res.status(400).json({
+      message:
+        "This time slot is already booked. Please select another time."
+    });
+  }
 
-
+  // Create booking
   const newBooking = {
     id: bookings.length + 1,
     userName,
@@ -91,10 +136,18 @@ if (station.availableSlots <= 0) {
     time,
     vehicleNumber
   };
-  
 
   bookings.push(newBooking);
-  station.availableSlots = station.availableSlots - 1;
+
+  // Reduce available slots
+  station.availableSlots -= 1;
+
+  // Update station status
+  if (station.availableSlots === 0) {
+    station.status = "Full";
+  } else {
+    station.status = "Available";
+  }
 
   res.status(201).json({
     message: "Booking created successfully",
@@ -102,10 +155,12 @@ if (station.availableSlots <= 0) {
   });
 });
 
+// Get all bookings
 app.get("/api/bookings", (req, res) => {
   res.json(bookings);
 });
 
+// Get one booking
 app.get("/api/bookings/:id", (req, res) => {
   const bookingId = Number(req.params.id);
 
@@ -122,6 +177,7 @@ app.get("/api/bookings/:id", (req, res) => {
   res.json(booking);
 });
 
+// Update booking
 app.put("/api/bookings/:id", (req, res) => {
   const bookingId = Number(req.params.id);
 
@@ -135,11 +191,39 @@ app.put("/api/bookings/:id", (req, res) => {
     });
   }
 
-  const { userName, contact, date, time, vehicleNumber } = req.body;
+  const {
+    userName,
+    contact,
+    date,
+    time,
+    vehicleNumber
+  } = req.body;
 
-  if (!userName || !contact || !date || !time || !vehicleNumber) {
+  if (
+    !userName ||
+    !contact ||
+    !date ||
+    !time ||
+    !vehicleNumber
+  ) {
     return res.status(400).json({
       message: "All booking fields are required"
+    });
+  }
+
+  // Check if another booking already uses the new slot
+  const slotAlreadyBooked = bookings.some(
+    (existingBooking) =>
+      existingBooking.id !== bookingId &&
+      existingBooking.stationId === booking.stationId &&
+      existingBooking.date === date &&
+      existingBooking.time === time
+  );
+
+  if (slotAlreadyBooked) {
+    return res.status(400).json({
+      message:
+        "This time slot is already booked. Please select another time."
     });
   }
 
@@ -155,6 +239,7 @@ app.put("/api/bookings/:id", (req, res) => {
   });
 });
 
+// Cancel booking
 app.delete("/api/bookings/:id", (req, res) => {
   const bookingId = Number(req.params.id);
 
@@ -177,9 +262,13 @@ app.delete("/api/bookings/:id", (req, res) => {
 
   if (station) {
     station.availableSlots += 1;
-    station.status = "Available";
+
+    if (station.availableSlots > 0) {
+      station.status = "Available";
+    }
   }
 
+  // Remove booking
   bookings.splice(bookingIndex, 1);
 
   res.json({
@@ -188,8 +277,10 @@ app.delete("/api/bookings/:id", (req, res) => {
   });
 });
 
-// start the server
+// Start server
 const port = 5000;
+
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
+
