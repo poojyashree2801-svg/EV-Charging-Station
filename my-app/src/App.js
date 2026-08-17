@@ -32,13 +32,17 @@ function App() {
   );
 
   // ===============================
-  // DASHBOARD STATE
+  // DASHBOARD
   // ===============================
 
   const [stations, setStations] = useState([]);
+  const [searchLocation, setSearchLocation] = useState("");
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedStation, setSelectedStation] = useState(null);
+
+  const [confirmedBooking, setConfirmedBooking] = useState(null);
+  const [message, setMessage] = useState("");
 
   const [formData, setFormData] = useState({
     userName: "",
@@ -49,62 +53,159 @@ function App() {
     vehicleNumber: ""
   });
 
-  const [message, setMessage] = useState("");
-
   // ===============================
   // STATION DETAILS
   // ===============================
 
   const stationDetails = {
     1: {
-      image: "/car.jpg",
+      image: "/Bangalore.png",
       rating: 4.7,
       description:
-        "Green Charge Hub is a modern EV charging station in Bangalore with fast charging facilities and convenient access for EV owners.",
+        "Green Charge Hub is a modern EV charging station in Bangalore with fast charging facilities.",
       facilities: ["DC Fast Charging", "Parking", "24/7 Access"],
       price: "₹15 per kWh",
-      timeSlots: [
-        "06:00 AM",
-        "07:00 AM",
-        "08:00 AM",
-        "09:00 AM",
-        "10:00 AM",
-        "11:00 AM",
-        "12:00 PM"
-      ]
+      timeSlots: ["06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM"]
     },
 
     2: {
-      image: "/charger.jpg",
+      image: "/Chennai.png",
       rating: 4.4,
       description:
-        "EcoCharge Station provides reliable AC charging in Chennai with a comfortable location for EV users.",
+        "EcoCharge Station provides reliable AC charging in Chennai with convenient access.",
       facilities: ["AC Charging", "Parking", "Easy Access"],
       price: "₹10 per kWh",
-      timeSlots: [
-        "07:00 AM",
-        "08:00 AM",
-        "09:00 AM",
-        "10:00 AM",
-        "11:00 AM",
-        "12:00 PM"
-      ]
+      timeSlots: ["07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM"]
     },
 
     3: {
-      image: "/charger2.jpg",
+      image: "/Hyderbad.png",
       rating: 4.2,
       description:
-        "VoltPoint is a DC fast charging station in Hyderabad. It is currently fully occupied.",
+        "VoltPoint is a DC fast charging station in Hyderabad with convenient charging facilities.",
       facilities: ["DC Fast Charging", "Parking", "Fast Charging"],
       price: "₹15 per kWh",
-      timeSlots: [
-        "06:00 AM",
-        "07:00 AM",
-        "08:00 AM",
-        "09:00 AM",
-        "10:00 AM"
-      ]
+      timeSlots: ["06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM"]
+    },
+
+    4: {
+      image: "/Manalore.png",
+      rating: 4.6,
+      description:
+        "Mangalore EV Hub provides fast and convenient EV charging facilities.",
+      facilities: ["DC Fast Charging", "Parking", "24/7 Access"],
+      price: "₹14 per kWh",
+      timeSlots: ["06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM"]
+    },
+
+    5: {
+      image: "/Mysore.png",
+      rating: 4.5,
+      description:
+        "Mysore Green Charge offers reliable AC charging with convenient parking.",
+      facilities: ["AC Charging", "Parking", "Easy Access"],
+      price: "₹11 per kWh",
+      timeSlots: ["07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM"]
+    },
+
+    6: {
+      image: "/pune.jpg",
+      rating: 4.8,
+      description:
+        "Pune EV Power is a high-speed charging station designed for quick EV charging.",
+      facilities: ["DC Fast Charging", "Parking", "24/7 Access"],
+      price: "₹16 per kWh",
+      timeSlots: ["06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM"]
+    },
+
+    7: {
+      image: "/Mumbai.png",
+      rating: 4.6,
+      description:
+        "Mumbai Charge Point provides fast EV charging in a convenient location.",
+      facilities: ["DC Fast Charging", "Parking", "Security"],
+      price: "₹17 per kWh",
+      timeSlots: ["06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM"]
+    },
+
+    8: {
+      image: "/Delhi.png",
+      rating: 4.5,
+      description:
+        "Delhi EV Station provides dependable DC fast charging facilities.",
+      facilities: ["DC Fast Charging", "Parking", "24/7 Access"],
+      price: "₹16 per kWh",
+      timeSlots: ["06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM"]
+    },
+
+    9: {
+      image: "/Kochi.png",
+      rating: 4.4,
+      description:
+        "Kochi Eco Charge offers comfortable and reliable AC charging.",
+      facilities: ["AC Charging", "Parking", "Waiting Area"],
+      price: "₹12 per kWh",
+      timeSlots: ["07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM"]
+    },
+
+    10: {
+      image: "/coimbate.png",
+      rating: 4.6,
+      description:
+        "Coimbatore EV Hub provides fast charging and convenient facilities.",
+      facilities: ["DC Fast Charging", "Parking", "Cafe"],
+      price: "₹14 per kWh",
+      timeSlots: ["06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM"]
+    },
+
+    11: {
+      image: "/ahmedbad.png",
+      rating: 4.5,
+      description:
+        "Ahmedabad Charge Station provides reliable DC fast charging.",
+      facilities: ["DC Fast Charging", "Parking", "Security"],
+      price: "₹15 per kWh",
+      timeSlots: ["06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM"]
+    },
+
+    12: {
+      image: "/jaipur.png",
+      rating: 4.3,
+      description:
+        "Jaipur Green Power provides convenient AC charging facilities.",
+      facilities: ["AC Charging", "Parking", "Waiting Area"],
+      price: "₹11 per kWh",
+      timeSlots: ["07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM"]
+    },
+
+    13: {
+      image: "/kolkata.png",
+      rating: 4.4,
+      description:
+        "Kolkata EV Point provides dependable DC fast charging facilities.",
+      facilities: ["DC Fast Charging", "Parking", "24/7 Access"],
+      price: "₹15 per kWh",
+      timeSlots: ["06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM"]
+    },
+
+    14: {
+      image: "/car.jpg",
+      rating: 4.7,
+      description:
+        "Goa EV Charge provides convenient charging facilities for EV owners.",
+      facilities: ["AC Charging", "Parking", "Cafe"],
+      price: "₹13 per kWh",
+      timeSlots: ["07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM"]
+    },
+
+    15: {
+      image: "/lucknow.png",
+      rating: 4.5,
+      description:
+        "Lucknow EV Hub provides fast and reliable EV charging facilities.",
+      facilities: ["DC Fast Charging", "Parking", "24/7 Access"],
+      price: "₹14 per kWh",
+      timeSlots: ["06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM"]
     }
   };
 
@@ -112,18 +213,8 @@ function App() {
   // LOGIN
   // ===============================
 
-  const handleLoginChange = (event) => {
-    const { name, value } = event.target;
-
-    setLoginData((previous) => ({
-      ...previous,
-      [name]: value
-    }));
-  };
-
   const handleLogin = (event) => {
     event.preventDefault();
-
     setAuthMessage("");
 
     if (!loginData.email || !loginData.password) {
@@ -145,26 +236,17 @@ function App() {
           return;
         }
 
-        localStorage.setItem(
-          "evUser",
-          JSON.stringify(data.user)
-        );
-
+        localStorage.setItem("evUser", JSON.stringify(data.user));
         setCurrentUser(data.user);
         setIsLoggedIn(true);
-        setAuthMessage("");
 
         setLoginData({
           email: "",
           password: ""
         });
       })
-      .catch((error) => {
-        console.error(error);
-
-        setAuthMessage(
-          "Unable to connect to the server. Please make sure the backend is running."
-        );
+      .catch(() => {
+        setAuthMessage("Unable to connect to the server.");
       });
   };
 
@@ -172,18 +254,8 @@ function App() {
   // REGISTER
   // ===============================
 
-  const handleRegisterChange = (event) => {
-    const { name, value } = event.target;
-
-    setRegisterData((previous) => ({
-      ...previous,
-      [name]: value
-    }));
-  };
-
   const handleRegister = (event) => {
     event.preventDefault();
-
     setAuthMessage("");
 
     if (
@@ -193,28 +265,21 @@ function App() {
       !registerData.password ||
       !registerData.confirmPassword
     ) {
-      setAuthMessage("Please fill in all registration fields.");
+      setAuthMessage("Please fill in all fields.");
       return;
     }
 
     if (!/^\d{10}$/.test(registerData.phone)) {
-      setAuthMessage(
-        "Please enter a valid 10-digit phone number."
-      );
+      setAuthMessage("Please enter a valid 10-digit phone number.");
       return;
     }
 
     if (registerData.password.length < 6) {
-      setAuthMessage(
-        "Password must contain at least 6 characters."
-      );
+      setAuthMessage("Password must contain at least 6 characters.");
       return;
     }
 
-    if (
-      registerData.password !==
-      registerData.confirmPassword
-    ) {
+    if (registerData.password !== registerData.confirmPassword) {
       setAuthMessage("Passwords do not match.");
       return;
     }
@@ -229,15 +294,12 @@ function App() {
       .then((response) => response.json())
       .then((data) => {
         if (!data.user) {
-          setAuthMessage(
-            data.message || "Registration failed."
-          );
+          setAuthMessage(data.message || "Registration failed.");
           return;
         }
 
-        setAuthMessage(
-          "Registration successful! Please login."
-        );
+        setAuthMessage("Registration successful! Please login.");
+        setShowRegister(false);
 
         setRegisterData({
           fullName: "",
@@ -246,15 +308,9 @@ function App() {
           password: "",
           confirmPassword: ""
         });
-
-        setShowRegister(false);
       })
-      .catch((error) => {
-        console.error(error);
-
-        setAuthMessage(
-          "Unable to connect to the server. Please make sure the backend is running."
-        );
+      .catch(() => {
+        setAuthMessage("Unable to connect to the server.");
       });
   };
 
@@ -264,17 +320,15 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem("evUser");
-
     setCurrentUser(null);
     setIsLoggedIn(false);
     setSelectedStation(null);
     setBookings([]);
-    setMessage("");
-    setAuthMessage("");
+    setConfirmedBooking(null);
   };
 
   // ===============================
-  // GET STATIONS
+  // FETCH DATA
   // ===============================
 
   const fetchStations = () => {
@@ -284,25 +338,17 @@ function App() {
         setStations(data);
         setLoading(false);
       })
-      .catch((error) => {
-        console.error(error);
+      .catch(() => {
         setMessage("Unable to load charging stations.");
         setLoading(false);
       });
   };
 
-  // ===============================
-  // GET BOOKINGS
-  // ===============================
-
   const fetchBookings = () => {
     fetch("http://localhost:5000/api/bookings")
       .then((response) => response.json())
-      .then((data) => {
-        setBookings(data);
-      })
-      .catch((error) => {
-        console.error(error);
+      .then((data) => setBookings(data))
+      .catch(() => {
         setMessage("Unable to load bookings.");
       });
   };
@@ -315,17 +361,18 @@ function App() {
   }, [isLoggedIn]);
 
   // ===============================
-  // BOOKING FORM
+  // SEARCH
   // ===============================
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
+  const filteredStations = stations.filter((station) =>
+    station.location
+      ?.toLowerCase()
+      .includes(searchLocation.trim().toLowerCase())
+  );
 
-    setFormData((previous) => ({
-      ...previous,
-      [name]: value
-    }));
-  };
+  // ===============================
+  // BOOKING
+  // ===============================
 
   const handleStationSelect = (station) => {
     setSelectedStation(station);
@@ -333,9 +380,9 @@ function App() {
     setFormData((previous) => ({
       ...previous,
       stationId: station.id,
-      time: "",
       userName: currentUser?.fullName || "",
-      contact: currentUser?.phone || ""
+      contact: currentUser?.phone || "",
+      time: ""
     }));
 
     setMessage("");
@@ -344,17 +391,12 @@ function App() {
   const handleTimeSlotSelect = (time) => {
     setFormData((previous) => ({
       ...previous,
-      stationId: selectedStation.id,
       time
     }));
-
-    setMessage("");
   };
 
   const isSlotBooked = (stationId, time) => {
-    if (!formData.date) {
-      return false;
-    }
+    if (!formData.date) return false;
 
     return bookings.some(
       (booking) =>
@@ -363,10 +405,6 @@ function App() {
         booking.time === time
     );
   };
-
-  // ===============================
-  // CREATE BOOKING
-  // ===============================
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -384,9 +422,7 @@ function App() {
     }
 
     if (!/^\d{10}$/.test(formData.contact)) {
-      setMessage(
-        "Please enter a valid 10-digit contact number."
-      );
+      setMessage("Please enter a valid 10-digit contact number.");
       return;
     }
 
@@ -404,9 +440,13 @@ function App() {
     })
       .then((response) => response.json())
       .then((data) => {
-        setMessage(data.message);
-
         if (data.booking) {
+          // IMPORTANT:
+          // Store the complete booking returned by backend.
+          setConfirmedBooking(data.booking);
+
+          setMessage("Booking confirmed successfully!");
+
           fetchBookings();
           fetchStations();
 
@@ -420,16 +460,27 @@ function App() {
           });
 
           setSelectedStation(null);
+
+          // Scroll to confirmation
+          setTimeout(() => {
+            document
+              .getElementById("booking-confirmation")
+              ?.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+              });
+          }, 200);
+        } else {
+          setMessage(data.message || "Booking failed.");
         }
       })
-      .catch((error) => {
-        console.error(error);
+      .catch(() => {
         setMessage("Booking failed. Please try again.");
       });
   };
 
   // ===============================
-  // CANCEL BOOKING
+  // CANCEL
   // ===============================
 
   const cancelBooking = (id) => {
@@ -441,15 +492,18 @@ function App() {
         setMessage(data.message);
         fetchBookings();
         fetchStations();
+
+        if (confirmedBooking?.id === id) {
+          setConfirmedBooking(null);
+        }
       })
-      .catch((error) => {
-        console.error(error);
+      .catch(() => {
         setMessage("Cancellation failed.");
       });
   };
 
   // ===============================
-  // LOGIN / REGISTER PAGE
+  // AUTH PAGE
   // ===============================
 
   if (!isLoggedIn) {
@@ -457,9 +511,7 @@ function App() {
       <div className="auth-page">
         <div className="auth-card">
 
-          <div className="auth-logo">
-            ⚡
-          </div>
+          <div className="auth-logo">⚡</div>
 
           <h1>EV Charging Station</h1>
 
@@ -470,76 +522,76 @@ function App() {
           </p>
 
           {showRegister ? (
-            <form
-              className="auth-form"
-              onSubmit={handleRegister}
-            >
+            <form className="auth-form" onSubmit={handleRegister}>
 
               <h2>📝 Create Account</h2>
 
-              <div className="auth-field">
-                <label>Full Name</label>
+              <input
+                type="text"
+                name="fullName"
+                placeholder="Full Name"
+                value={registerData.fullName}
+                onChange={(e) =>
+                  setRegisterData({
+                    ...registerData,
+                    fullName: e.target.value
+                  })
+                }
+              />
 
-                <input
-                  type="text"
-                  name="fullName"
-                  placeholder="Enter your full name"
-                  value={registerData.fullName}
-                  onChange={handleRegisterChange}
-                />
-              </div>
+              <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                value={registerData.email}
+                onChange={(e) =>
+                  setRegisterData({
+                    ...registerData,
+                    email: e.target.value
+                  })
+                }
+              />
 
-              <div className="auth-field">
-                <label>Email Address</label>
+              <input
+                type="text"
+                name="phone"
+                placeholder="10-digit Phone Number"
+                value={registerData.phone}
+                onChange={(e) =>
+                  setRegisterData({
+                    ...registerData,
+                    phone: e.target.value
+                  })
+                }
+              />
 
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Enter your email address"
-                  value={registerData.email}
-                  onChange={handleRegisterChange}
-                />
-              </div>
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={registerData.password}
+                onChange={(e) =>
+                  setRegisterData({
+                    ...registerData,
+                    password: e.target.value
+                  })
+                }
+              />
 
-              <div className="auth-field">
-                <label>Phone Number</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                value={registerData.confirmPassword}
+                onChange={(e) =>
+                  setRegisterData({
+                    ...registerData,
+                    confirmPassword: e.target.value
+                  })
+                }
+              />
 
-                <input
-                  type="text"
-                  name="phone"
-                  placeholder="10-digit phone number"
-                  value={registerData.phone}
-                  onChange={handleRegisterChange}
-                />
-              </div>
-
-              <div className="auth-field">
-                <label>Password</label>
-
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Enter password"
-                  value={registerData.password}
-                  onChange={handleRegisterChange}
-                />
-              </div>
-
-              <div className="auth-field">
-                <label>Confirm Password</label>
-
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  placeholder="Confirm your password"
-                  value={registerData.confirmPassword}
-                  onChange={handleRegisterChange}
-                />
-              </div>
-
-              <button type="submit">
-                Register
-              </button>
+              <button type="submit">Register</button>
 
               <p className="auth-switch">
                 Already have an account?
@@ -558,40 +610,35 @@ function App() {
 
             </form>
           ) : (
-            <form
-              className="auth-form"
-              onSubmit={handleLogin}
-            >
+            <form className="auth-form" onSubmit={handleLogin}>
 
               <h2>🔐 Login</h2>
 
-              <div className="auth-field">
-                <label>Email Address</label>
+              <input
+                type="email"
+                placeholder="Email Address"
+                value={loginData.email}
+                onChange={(e) =>
+                  setLoginData({
+                    ...loginData,
+                    email: e.target.value
+                  })
+                }
+              />
 
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Enter your email address"
-                  value={loginData.email}
-                  onChange={handleLoginChange}
-                />
-              </div>
+              <input
+                type="password"
+                placeholder="Password"
+                value={loginData.password}
+                onChange={(e) =>
+                  setLoginData({
+                    ...loginData,
+                    password: e.target.value
+                  })
+                }
+              />
 
-              <div className="auth-field">
-                <label>Password</label>
-
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Enter your password"
-                  value={loginData.password}
-                  onChange={handleLoginChange}
-                />
-              </div>
-
-              <button type="submit">
-                Login
-              </button>
+              <button type="submit">Login</button>
 
               <p className="auth-switch">
                 Don't have an account?
@@ -623,23 +670,24 @@ function App() {
   }
 
   // ===============================
-  // MAIN DASHBOARD
+  // DASHBOARD
   // ===============================
 
   return (
     <div className="App">
 
+      {/* HEADER */}
+
       <header className="dashboard-header">
 
-        <div className="header-icon">
-          ⚡
-        </div>
+        <div className="header-top">
+          <div className="header-icon">⚡</div>
 
-        <div className="header-user">
-
-          <span>
-            Welcome, <strong>{currentUser?.fullName}</strong>
-          </span>
+          <div className="user-info">
+            <strong>Welcome, {currentUser?.fullName}</strong>
+            <span>📧 {currentUser?.email}</span>
+            <span>📱 {currentUser?.phone}</span>
+          </div>
 
           <button
             className="logout-button"
@@ -647,12 +695,9 @@ function App() {
           >
             Logout
           </button>
-
         </div>
 
-        <h1>
-          EV Charging Station
-        </h1>
+        <h1>EV Charging Station</h1>
 
         <p>
           Find, select and book your EV charging station
@@ -660,24 +705,49 @@ function App() {
 
       </header>
 
+      {/* STATIONS */}
+
       <section className="dashboard-section">
 
         <div className="section-heading">
 
           <div>
+            <span className="section-label">EXPLORE</span>
+            <h2>🔌 Charging Stations</h2>
 
-            <span className="section-label">
-              EXPLORE
-            </span>
+            <div className="location-search">
 
-            <h2>
-              🔌 Charging Stations
-            </h2>
+              <input
+                type="text"
+                placeholder="🔍 Enter city or place name"
+                value={searchLocation}
+                onChange={(e) =>
+                  setSearchLocation(e.target.value)
+                }
+              />
 
+              <button
+                type="button"
+                onClick={() =>
+                  setSearchLocation(searchLocation.trim())
+                }
+              >
+                Search
+              </button>
+
+              <button
+                type="button"
+                className="clear-search-button"
+                onClick={() => setSearchLocation("")}
+              >
+                Clear
+              </button>
+
+            </div>
           </div>
 
           <span className="station-count">
-            {stations.length} Stations
+            {filteredStations.length} Stations
           </span>
 
         </div>
@@ -686,13 +756,24 @@ function App() {
           <div className="loading-box">
             Loading charging stations...
           </div>
+        ) : filteredStations.length === 0 ? (
+          <div className="no-results">
+            <div className="no-results-icon">🔍</div>
+            <h3>No charging stations found</h3>
+            <p>
+              No charging stations are available in
+              "{searchLocation}".
+            </p>
+            <button onClick={() => setSearchLocation("")}>
+              Show All Stations
+            </button>
+          </div>
         ) : (
           <div className="stations">
 
-            {stations.map((station) => {
+            {filteredStations.map((station) => {
 
-              const details =
-                stationDetails[station.id];
+              const details = stationDetails[station.id];
 
               return (
                 <div
@@ -726,9 +807,7 @@ function App() {
 
                     <div className="station-title-row">
 
-                      <h3>
-                        {station.name}
-                      </h3>
+                      <h3>{station.name}</h3>
 
                       <span className="rating">
                         ⭐ {details?.rating}
@@ -741,16 +820,13 @@ function App() {
                     </p>
 
                     <div className="station-info">
-
-                      <span>
-                        ⚡ {station.chargerType}
-                      </span>
-
-                      <span>
-                        🔋 {station.availableSlots} slots
-                      </span>
-
+                      <span>⚡ {station.chargerType}</span>
+                      <span>🔋 {station.availableSlots} slots</span>
                     </div>
+
+                    <p className="card-price">
+                      💰 {details?.price}
+                    </p>
 
                     <button
                       className="details-button"
@@ -772,6 +848,8 @@ function App() {
 
       </section>
 
+      {/* DETAILS */}
+
       {selectedStation && (
 
         <section className="station-details">
@@ -779,7 +857,6 @@ function App() {
           <div className="details-top">
 
             <div>
-
               <span className="section-label">
                 STATION INFORMATION
               </span>
@@ -787,21 +864,18 @@ function App() {
               <h2>
                 📍 {selectedStation.name}
               </h2>
-
             </div>
 
             <button
               className="close-button"
               onClick={() => {
-
                 setSelectedStation(null);
 
-                setFormData((previous) => ({
-                  ...previous,
+                setFormData({
+                  ...formData,
                   stationId: "",
                   time: ""
-                }));
-
+                });
               }}
             >
               ✕ Close
@@ -812,11 +886,7 @@ function App() {
           <div className="details-container">
 
             <img
-              src={
-                stationDetails[
-                  selectedStation.id
-                ]?.image
-              }
+              src={stationDetails[selectedStation.id]?.image}
               alt={selectedStation.name}
               className="details-image"
             />
@@ -824,73 +894,43 @@ function App() {
             <div className="details-info">
 
               <div className="rating-large">
-                ⭐{" "}
-                {
-                  stationDetails[
-                    selectedStation.id
-                  ]?.rating
-                }{" "}
-                / 5
+                ⭐ {stationDetails[selectedStation.id]?.rating} / 5
               </div>
 
               <p>
-                <strong>
-                  📍 Location:
-                </strong>{" "}
+                <strong>📍 Location:</strong>{" "}
                 {selectedStation.location}
               </p>
 
               <p>
-                <strong>
-                  ⚡ Charger:
-                </strong>{" "}
+                <strong>⚡ Charger:</strong>{" "}
                 {selectedStation.chargerType}
               </p>
 
               <p>
-                <strong>
-                  💰 Price:
-                </strong>{" "}
-                {
-                  stationDetails[
-                    selectedStation.id
-                  ]?.price
-                }
+                <strong>💰 Price:</strong>{" "}
+                {stationDetails[selectedStation.id]?.price}
               </p>
 
               <p>
-                <strong>
-                  🔋 Available Slots:
-                </strong>{" "}
+                <strong>🔋 Available Slots:</strong>{" "}
                 {selectedStation.availableSlots}
               </p>
 
               <p className="description">
-                {
-                  stationDetails[
-                    selectedStation.id
-                  ]?.description
-                }
+                {stationDetails[selectedStation.id]?.description}
               </p>
 
-              <h3>
-                Facilities
-              </h3>
+              <h3>Facilities</h3>
 
               <div className="facilities">
-
-                {
-                  stationDetails[
-                    selectedStation.id
-                  ]?.facilities.map(
-                    (facility) => (
-                      <span key={facility}>
-                        ✓ {facility}
-                      </span>
-                    )
+                {stationDetails[selectedStation.id]?.facilities.map(
+                  (facility) => (
+                    <span key={facility}>
+                      ✓ {facility}
+                    </span>
                   )
-                }
-
+                )}
               </div>
 
             </div>
@@ -899,32 +939,25 @@ function App() {
 
           <div className="slots-section">
 
-            <h3>
-              🕐 Select an Available Time Slot
-            </h3>
+            <h3>🕐 Select an Available Time Slot</h3>
 
             {!formData.date && (
               <p className="slot-note">
-                Please select a date below before
-                choosing a time slot.
+                Please select a booking date below first.
               </p>
             )}
 
             <div className="time-slots">
 
-              {
-                stationDetails[
-                  selectedStation.id
-                ]?.timeSlots.map((time) => {
+              {stationDetails[selectedStation.id]?.timeSlots.map(
+                (time) => {
 
-                  const booked =
-                    isSlotBooked(
-                      selectedStation.id,
-                      time
-                    );
+                  const booked = isSlotBooked(
+                    selectedStation.id,
+                    time
+                  );
 
-                  const selected =
-                    formData.time === time;
+                  const selected = formData.time === time;
 
                   return (
                     <button
@@ -932,27 +965,17 @@ function App() {
                       type="button"
                       disabled={
                         booked ||
-                        selectedStation.availableSlots ===
-                          0 ||
+                        selectedStation.availableSlots === 0 ||
                         !formData.date
                       }
                       className={`time-slot ${
-                        selected
-                          ? "selected-slot"
-                          : ""
-                      } ${
-                        booked
-                          ? "booked-slot"
-                          : ""
-                      }`}
+                        selected ? "selected-slot" : ""
+                      } ${booked ? "booked-slot" : ""}`}
                       onClick={() =>
                         handleTimeSlotSelect(time)
                       }
                     >
-
-                      <strong>
-                        {time}
-                      </strong>
+                      <strong>{time}</strong>
 
                       <span>
                         {booked
@@ -961,12 +984,10 @@ function App() {
                           ? "Selected"
                           : "Available"}
                       </span>
-
                     </button>
                   );
-
-                })
-              }
+                }
+              )}
 
             </div>
 
@@ -975,20 +996,18 @@ function App() {
         </section>
       )}
 
+      {/* BOOKING FORM */}
+
       <section className="booking-section">
 
         <div className="section-heading">
 
           <div>
-
             <span className="section-label">
               RESERVATION
             </span>
 
-            <h2>
-              📝 Book a Charging Slot
-            </h2>
-
+            <h2>📝 Book a Charging Slot</h2>
           </div>
 
         </div>
@@ -996,194 +1015,149 @@ function App() {
         <form onSubmit={handleSubmit}>
 
           <div className="form-group">
-
-            <label>
-              Your Name
-            </label>
+            <label>Your Name</label>
 
             <input
               type="text"
-              name="userName"
-              placeholder="Enter your name"
               value={formData.userName}
-              onChange={handleChange}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  userName: e.target.value
+                })
+              }
+              placeholder="Enter your name"
             />
-
           </div>
 
           <div className="form-group">
-
-            <label>
-              Contact Number
-            </label>
+            <label>Contact Number</label>
 
             <input
               type="text"
-              name="contact"
-              placeholder="10-digit contact number"
               value={formData.contact}
-              onChange={handleChange}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  contact: e.target.value
+                })
+              }
+              placeholder="10-digit contact number"
             />
-
           </div>
 
           <div className="form-group">
-
-            <label>
-              Vehicle Number
-            </label>
+            <label>Vehicle Number</label>
 
             <input
               type="text"
-              name="vehicleNumber"
-              placeholder="Example: TN01AB1234"
               value={formData.vehicleNumber}
-              onChange={handleChange}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  vehicleNumber: e.target.value
+                })
+              }
+              placeholder="Example: KA01AB1234"
             />
-
           </div>
 
           <div className="form-group">
-
-            <label>
-              Charging Station
-            </label>
+            <label>Charging Station</label>
 
             <select
-              name="stationId"
               value={formData.stationId}
-              onChange={(event) => {
+              onChange={(e) => {
 
-                handleChange(event);
-
-                const station =
-                  stations.find(
-                    (item) =>
-                      item.id ===
-                      Number(
-                        event.target.value
-                      )
-                  );
+                const station = stations.find(
+                  (item) =>
+                    item.id === Number(e.target.value)
+                );
 
                 if (station) {
-
-                  setSelectedStation(station);
-
-                  setFormData(
-                    (previous) => ({
-                      ...previous,
-                      userName:
-                        currentUser?.fullName ||
-                        "",
-                      contact:
-                        currentUser?.phone ||
-                        ""
-                    })
-                  );
-
+                  handleStationSelect(station);
                 }
 
               }}
             >
-
               <option value="">
                 Select Station
               </option>
 
               {stations.map((station) => (
-
                 <option
                   key={station.id}
                   value={station.id}
-                  disabled={
-                    station.availableSlots === 0
-                  }
+                  disabled={station.availableSlots === 0}
                 >
-                  {station.name} -{" "}
-                  {station.availableSlots} slots
+                  {station.name} - {station.availableSlots} slots
                 </option>
-
               ))}
-
             </select>
-
           </div>
 
           <div className="form-group">
-
-            <label>
-              Booking Date
-            </label>
+            <label>Booking Date</label>
 
             <input
               type="date"
-              name="date"
-              min={
-                new Date()
-                  .toISOString()
-                  .split("T")[0]
-              }
+              min={new Date().toISOString().split("T")[0]}
               value={formData.date}
-              onChange={handleChange}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  date: e.target.value,
+                  time: ""
+                })
+              }
             />
-
           </div>
 
           <div className="form-group">
-
-            <label>
-              Time Slot
-            </label>
+            <label>Time Slot</label>
 
             <select
-              name="time"
               value={formData.time}
-              onChange={handleChange}
-              disabled={
-                !selectedStation ||
-                !formData.date
+              disabled={!selectedStation || !formData.date}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  time: e.target.value
+                })
               }
             >
 
               <option value="">
-
                 {!selectedStation
                   ? "Select station first"
                   : !formData.date
                   ? "Select date first"
                   : "Select time slot"}
-
               </option>
 
               {selectedStation &&
                 formData.date &&
-                stationDetails[
-                  selectedStation.id
-                ]?.timeSlots.map((time) => (
+                stationDetails[selectedStation.id]?.timeSlots.map(
+                  (time) => {
 
-                  <option
-                    key={time}
-                    value={time}
-                    disabled={isSlotBooked(
+                    const booked = isSlotBooked(
                       selectedStation.id,
                       time
-                    )}
-                  >
-                    {time}
+                    );
 
-                    {isSlotBooked(
-                      selectedStation.id,
-                      time
-                    )
-                      ? " - Booked"
-                      : " - Available"}
-
-                  </option>
-
-                ))}
+                    return (
+                      <option
+                        key={time}
+                        value={time}
+                        disabled={booked}
+                      >
+                        {time} {booked ? "- Booked" : "- Available"}
+                      </option>
+                    );
+                  }
+                )}
 
             </select>
-
           </div>
 
           <button
@@ -1194,43 +1168,138 @@ function App() {
               selectedStation.availableSlots === 0
             }
           >
-            Confirm Charging Booking ⚡
+            ⚡ Confirm Charging Booking
           </button>
 
         </form>
 
       </section>
 
-      {message && (
+      {/* ===============================
+          IMPROVED BOOKING CONFIRMATION
+          =============================== */}
 
+      {confirmedBooking && (
+
+        <section
+          id="booking-confirmation"
+          className="booking-confirmation"
+        >
+
+          <div className="success-circle">
+            ✓
+          </div>
+
+          <h2>Booking Confirmed!</h2>
+
+          <p className="success-text">
+            Your EV charging slot has been successfully reserved.
+          </p>
+
+          <div className="booking-id-box">
+            <span>BOOKING ID</span>
+            <strong>#{confirmedBooking.id}</strong>
+          </div>
+
+          <div className="confirmation-grid">
+
+            <div className="confirmation-item">
+              <span>🔌 Charging Station</span>
+
+              <strong>
+                {stations.find(
+                  (station) =>
+                    station.id ===
+                    Number(confirmedBooking.stationId)
+                )?.name || "Charging Station"}
+              </strong>
+            </div>
+
+            <div className="confirmation-item">
+              <span>📅 Booking Date</span>
+
+              <strong>
+                {confirmedBooking.date}
+              </strong>
+            </div>
+
+            <div className="confirmation-item">
+              <span>🕐 Time Slot</span>
+
+              <strong>
+                {confirmedBooking.time}
+              </strong>
+            </div>
+
+            <div className="confirmation-item">
+              <span>🚗 Vehicle Number</span>
+
+              <strong>
+                {confirmedBooking.vehicleNumber}
+              </strong>
+            </div>
+
+            <div className="confirmation-item">
+              <span>👤 Customer</span>
+
+              <strong>
+                {confirmedBooking.userName}
+              </strong>
+            </div>
+
+            <div className="confirmation-item">
+              <span>📞 Contact</span>
+
+              <strong>
+                {confirmedBooking.contact}
+              </strong>
+            </div>
+
+          </div>
+
+          <div className="confirmation-note">
+            <strong>⚡ Please arrive on time.</strong>
+            <br />
+            Your charging slot has been reserved successfully.
+          </div>
+
+          <button
+            className="confirmation-close"
+            onClick={() => setConfirmedBooking(null)}
+          >
+            Close Confirmation
+          </button>
+
+        </section>
+
+      )}
+
+      {/* MESSAGE */}
+
+      {message && (
         <div
           className={`message ${
-            message
-              .toLowerCase()
-              .includes("success")
+            message.toLowerCase().includes("success")
               ? "success-message"
               : "error-message"
           }`}
         >
           {message}
         </div>
-
       )}
+
+      {/* MY BOOKINGS */}
 
       <section className="bookings-section">
 
         <div className="section-heading">
 
           <div>
-
             <span className="section-label">
               YOUR RESERVATIONS
             </span>
 
-            <h2>
-              📋 My Bookings
-            </h2>
-
+            <h2>📋 My Bookings</h2>
           </div>
 
           <button
@@ -1245,20 +1314,13 @@ function App() {
         {bookings.length === 0 ? (
 
           <div className="empty-bookings">
+            <div>🔋</div>
 
-            <div>
-              🔋
-            </div>
-
-            <h3>
-              No bookings yet
-            </h3>
+            <h3>No bookings yet</h3>
 
             <p>
-              Your confirmed charging
-              reservations will appear here.
+              Your confirmed charging reservations will appear here.
             </p>
-
           </div>
 
         ) : (
@@ -1267,17 +1329,12 @@ function App() {
 
             {bookings.map((booking) => {
 
-              const station =
-                stations.find(
-                  (item) =>
-                    item.id ===
-                    Number(
-                      booking.stationId
-                    )
-                );
+              const station = stations.find(
+                (item) =>
+                  item.id === Number(booking.stationId)
+              );
 
               return (
-
                 <div
                   className="booking-card"
                   key={booking.id}
@@ -1296,37 +1353,27 @@ function App() {
                   <div className="booking-details">
 
                     <p>
-                      <strong>
-                        👤 Name
-                      </strong>
+                      <strong>👤 Name</strong>
                       {booking.userName}
                     </p>
 
                     <p>
-                      <strong>
-                        📞 Contact
-                      </strong>
+                      <strong>📞 Contact</strong>
                       {booking.contact}
                     </p>
 
                     <p>
-                      <strong>
-                        📅 Date
-                      </strong>
+                      <strong>📅 Date</strong>
                       {booking.date}
                     </p>
 
                     <p>
-                      <strong>
-                        🕐 Time
-                      </strong>
+                      <strong>🕐 Time</strong>
                       {booking.time}
                     </p>
 
                     <p>
-                      <strong>
-                        🚗 Vehicle
-                      </strong>
+                      <strong>🚗 Vehicle</strong>
                       {booking.vehicleNumber}
                     </p>
 
@@ -1335,22 +1382,17 @@ function App() {
                   <button
                     className="cancel-button"
                     onClick={() =>
-                      cancelBooking(
-                        booking.id
-                      )
+                      cancelBooking(booking.id)
                     }
                   >
                     Cancel Booking
                   </button>
 
                 </div>
-
               );
-
             })}
 
           </div>
-
         )}
 
       </section>
